@@ -1,0 +1,64 @@
+[project]
+name = "dem-left-tracker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dotenv>=0.9.9",
+    "requests>=2.33.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.9",
+    "ty>=0.0.28",
+    "mypy>=1.20.0",
+    "types-requests>=2.33.0.20260402",
+]
+
+# ruff formatter
+[tool.ruff]
+# Target Python version (adjust to your project's needs)
+target-version = "py310"
+# Maximum line length (Ruff defaults to 88, similar to Black)
+line-length = 88
+
+[tool.ruff.lint]
+# Enable rules:
+# E: Pycodestyle errors
+# F: Pyflakes
+# I: isort (Import sorting)
+# B: Flake8-bugbear (Potential bugs)
+# UP: Pyupgrade (Upgrade syntax to newer Python versions)
+# N: Pep8-naming
+# TCH: flake8-type-checking
+select = ["E", "F", "I", "B", "UP", "N", "TCH"]
+
+# Ignore specific rules if needed
+ignore = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+# Organize imports settings
+known-first-party = ["my_project"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+# Respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# --- MYPY CONFIGURATION ---
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false # Set to true if you want to enforce 100% typing
+ignore_missing_imports = true
