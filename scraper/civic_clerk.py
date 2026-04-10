@@ -4,6 +4,7 @@ import sys
 import time
 from datetime import datetime
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
@@ -38,7 +39,6 @@ logger = logging.getLogger(__name__)
 os.makedirs(CONFIG["OUTPUT_DIR"], exist_ok=True)
 
 
-# --- 3. CREATE SESSION WITH RETRIES ---
 def create_session() -> requests.Session:
     session = requests.Session()
     retry_strategy = Retry(
@@ -56,10 +56,22 @@ def create_session() -> requests.Session:
 SESSION = create_session()
 
 
-# --- 4. HELPER: SKIP EXISTING FILES ---
-def already_downloaded(filename: str) -> bool:
-    """Check if file already exists in output directory."""
-    return os.path.exists(os.path.join(CONFIG["OUTPUT_DIR"], filename))
+def get_first_subdomain(url: str) -> str:
+    # Ensure a scheme exists for proper parsing
+    if not url.startswith(("http://", "https://")):
+        url = "http://" + url
+    parsed = urlparse(url)
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("Invalid URL, no hostname found")
+    # Split hostname by dots and take the first part
+    return hostname.split(".")[0]
+
+
+def already_downloaded(relative_path: str) -> bool:
+    """Check if file already exists in output directory using a relative path."""
+    full_path = os.path.join(CONFIG["OUTPUT_DIR"], relative_path)
+    return os.path.exists(full_path)
 
 
 # --- 5. API FUNCTIONS (with pagination) ---
@@ -105,7 +117,7 @@ def get_all_events() -> list[dict[str, Any]]:
 
             # Next link for pagination
             url = data.get("@odata.nextLink")
-            params = None  # nextLink already contains full query
+            params = {}  # nextLink already contains full query
             page_num += 1
 
             # Respect rate limiting between pages
@@ -172,16 +184,23 @@ def get_direct_download_url(file_info: dict[str, Any]) -> str | None:
     return None
 
 
-def download_file(file_url: str, filename: str) -> bool:
-    """Download a file from URL to OUTPUT_DIR/filename, skip if already exists."""
+# --- download_file now accepts a relative path and creates subfolders ---
+def download_file(file_url: str, relative_path: str) -> bool:
+    """
+    Download a file from URL to OUTPUT_DIR/relative_path.
+    Creates any necessary subdirectories.
+    """
     # Check if already downloaded
-    if already_downloaded(filename):
-        logger.info(f"⏭️ Skipping {filename} (already exists)")
+    if already_downloaded(relative_path):
         return False
+
+    full_path = os.path.join(CONFIG["OUTPUT_DIR"], relative_path)
+    # Create the subdirectory if it doesn't exist
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # noqa: E501
         }
         response = SESSION.get(file_url, headers=headers, stream=True, timeout=60)
         response.raise_for_status()
@@ -193,15 +212,14 @@ def download_file(file_url: str, filename: str) -> bool:
             logger.debug(f"JSON Content: {response.text[:200]}")
             return False
 
-        filepath = os.path.join(CONFIG["OUTPUT_DIR"], filename)
-        with open(filepath, "wb") as f:
+        with open(full_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-        logger.info(f"✅ Downloaded: {filename}")
+        logger.info(f"✅ Downloaded: {relative_path}")
         return True
     except Exception as e:
-        logger.error(f"❌ Failed to download {filename}: {e}")
+        logger.error(f"❌ Failed to download {relative_path}: {e}")
         return False
 
 
@@ -224,12 +242,14 @@ def parse_date(date_str: str | None) -> datetime | None:
         return None
 
 
-# --- 6. MAIN PROCESSING LOGIC ---
+# --- 6. MAIN PROCESSING LOGIC (modified to build relative paths) ---
 def process_events(events: list[dict[str, Any]]) -> int:
     """Filter and process events based on configuration. Returns count of downloads."""
     minutes_count = 0
 
+    municipality = get_first_subdomain(CONFIG["BASE_URL"])
     start_date_obj = parse_date(CONFIG["START_DATE"])
+    year = str(start_date_obj.year) if start_date_obj else "unknown"
     end_date_obj = parse_date(CONFIG["END_DATE"])
     committee_filter = CONFIG["COMMITTEE_FILTER"]
 
@@ -244,7 +264,6 @@ def process_events(events: list[dict[str, Any]]) -> int:
             continue
 
         event_name = event.get("eventName", "Unknown Event")
-        event_date_str = event.get("eventDate", "")
         category_name = event.get("categoryName", "Unknown Category")
 
         # Committee filter (case-insensitive)
@@ -270,14 +289,15 @@ def process_events(events: list[dict[str, Any]]) -> int:
                 real_url = get_direct_download_url(file_info)
                 if real_url:
                     file_name = file_info.get("name", "minutes")
-                    clean_date = (
-                        event_date_str.split("T")[0] if event_date_str else "nodate"
-                    )
-                    safe_name = clean_filename(
-                        f"{clean_date}_{category_name}_{event_name}_{file_name}.pdf"
+                    # Sanitize category name for use as a folder name
+                    safe_category = clean_filename(category_name)
+                    safe_filename = clean_filename(f"{file_name}.pdf")
+                    # Build relative path: category_folder / filename
+                    relative_path = os.path.join(
+                        municipality, year, safe_category, safe_filename
                     )
 
-                    if download_file(real_url, safe_name):
+                    if download_file(real_url, relative_path):
                         minutes_count += 1
                 else:
                     logger.warning(
@@ -298,7 +318,8 @@ def main() -> None:
 
     total_downloaded = process_events(events)
     logger.info(
-        f"✅ Job Complete. Downloaded {total_downloaded} minute files (skipped existing)."
+        f"✅ Job Complete. Downloaded {total_downloaded} minute files "
+        "(skipped existing)."
     )
 
 

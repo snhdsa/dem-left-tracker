@@ -2,6 +2,10 @@
 install:
     uv sync
 
+# format
+format:
+    uv run ruff format .
+
 # Run linters
 lint:
     uv run ruff check .
