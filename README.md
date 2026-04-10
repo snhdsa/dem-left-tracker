@@ -1,6 +1,6 @@
-# Manchester Civic Clerk Scraper
+# Civic Clerk Scraper
 
-Scraping agendas and minutes via CivicClerks API.
+Scraping minutes via CivicClerks API.
 
 ---
 
@@ -36,10 +36,10 @@ You need two tools installed on your system to run this project:
 
 1.  **Clone and Install Dependencies**
     ```bash
-    git clone <repo-url>
-    cd <repo-dir>
+    git clone https://github.com/snhdsa/dem-left-tracker.git
+    cd dem-left-tracker
 
-    # Uv will read pyproject.toml, create a virtual env, and install deps
+    # uv will read pyproject.toml, create a virtual env, and install deps
     just install
     ```
 
@@ -65,7 +65,7 @@ We use `just` to wrap all development commands. Run `just` (with no args) to see
 | :--- | :--- |
 | `just install` | Install/Update project dependencies via `uv sync`. |
 | `just lint` | Run Ruff (linter) and Mypy (type checker). |
-| `just fix` | Auto-fix linting errors and format code with Ruff. |
+| `just format` | Auto-fix linting errors and format code with Ruff. |
 | `just run` | Execute the scraper using the virtual environment. |
 | `just check` | Run `lint` first, then `run` (ensures code quality before execution). |
 
@@ -74,7 +74,7 @@ We use `just` to wrap all development commands. Run `just` (with no args) to see
 The recommended workflow for contributing to this codebase:
 
 1.  Write your code.
-2.  Run `just fix` to auto-format and fix basic linting issues.
+2.  Run `just format` to auto-format and fix basic linting issues.
 3.  Run `just check`. If Mypy finds a type error, fix it.
 4.  Commit.
 
