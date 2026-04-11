@@ -17,3 +17,6 @@ run:
 
 # Run checks then script
 check: lint run
+
+buildimage:
+    docker build -t dem-left-tracker -f docker/Dockerfile .
