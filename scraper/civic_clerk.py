@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import time
 from datetime import datetime
@@ -252,6 +253,7 @@ def process_events(events: list[dict[str, Any]]) -> int:
     year = str(start_date_obj.year) if start_date_obj else "unknown"
     end_date_obj = parse_date(CONFIG["END_DATE"])
     committee_filter = CONFIG["COMMITTEE_FILTER"]
+    committee_regex = re.compile("(?:(Special )?Committee on .*)")
 
     logger.info(
         f"Filters applied -> Committee: '{committee_filter or 'All'}', "
@@ -265,6 +267,14 @@ def process_events(events: list[dict[str, Any]]) -> int:
 
         event_name = event.get("eventName", "Unknown Event")
         category_name = event.get("categoryName", "Unknown Category")
+
+        # Manchester NH does not store the committee name in the categoryName field
+        # which is always set to "Board of Aldermen". Instead they use the event_name
+        # for that value fairly consistently so we can use this as a backup.
+        if category_name == "Board of Mayor and Aldermen":
+            match = committee_regex.search(event_name)
+            if match:
+                category_name = match.group(0)
 
         # Committee filter (case-insensitive)
         if committee_filter:
