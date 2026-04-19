@@ -1,6 +1,7 @@
-# Civic Clerk Scraper
+# Municipal Dem Left Tracker
 
-Scraping minutes via CivicClerks API.
+From scraping APIs to parsing out the meaningful bits, this should help to
+provide a bit of insight into our municipal politics.
 
 ---
 
@@ -21,7 +22,7 @@ I decided to move from standard legacy Python tools (`pip`, `make`, `flake8`) in
 
 You need two tools installed on your system to run this project:
 
-1.  **Uv** (Python Package Manager)
+1.  **uv** (Python Package Manager)
     ```bash
     curl -LsSf https://astral.sh/uv/install.sh | sh
     ```
@@ -52,6 +53,7 @@ You need two tools installed on your system to run this project:
 
 3.  **Run the Scraper**
     ```bash
+    source .env
     just run
     ```
 
@@ -84,13 +86,18 @@ The recommended workflow for contributing to this codebase:
 
 ```text
 .
+├── README.md
+├── downloaded_minutes    # Where downloaded minutes get stored
+│   ├── manchesternh
+│   └── nashuanh
 ├── justfile              # Command recipes (The "Makefile")
-├── pyproject.toml        # Project config & Tool settings (Ruff, Mypy)
-├── uv.lock               # Locked dependency versions (Do not edit manually)
-├── requirements.txt      # List of dependencies (Generated)
-├── .env                  # Secrets and Configuration (Not in git)
-├── scraper.py            # Main application logic
-└── README.md             # This file
+├── pyproject.toml        # Project dependencies
+├── scraper               # contains logic related to scraping APIs
+│   └── civic_clerk.py
+├── scraper.log           # Log generated at run-time.
+├── .env                  # Configuration (COPY OVER FROM .env.example)
+├── .env.example
+└── uv.lock
 ```
 
 ## ⚙️ Configuration Details
