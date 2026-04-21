@@ -112,3 +112,4 @@ Configuration is centralized in `pyproject.toml` under the `[tool.ruff]` and `[t
 *   **Virtual Environment:** `uv` automatically manages a `.venv` in the project root. You never need to run `python -m venv` or `source .venv/bin/activate`.
 *   **Execution:** `uv run scraper/civic_clerk.py` automatically uses the project's virtual environment.
 
+test
