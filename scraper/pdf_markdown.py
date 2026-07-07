@@ -25,20 +25,20 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # ------------------------------------------------------------------------------
 # Extraction Functions
 # ------------------------------------------------------------------------------
-def extract_text_pypdf(pdf_path: str, use_layout_mode: bool = True) -> str:
-    try:
-        reader = PdfReader(pdf_path)
-        text_parts = []
-        for page in reader.pages:
-            if use_layout_mode:
-                page_text = page.extract_text(extraction_mode="layout")
-            else:
-                page_text = page.extract_text()
-            text_parts.append(page_text)
-        return "\n".join(text_parts)
-    except Exception as e:
-        print(f"Error extracting text with PyPDF from {pdf_path}: {e}")
-        return ""
+#def extract_text_pypdf(pdf_path: str, use_layout_mode: bool = True) -> str:
+#    try:
+#        reader = PdfReader(pdf_path)
+#        text_parts = []
+#        for page in reader.pages:
+#            if use_layout_mode:
+#                page_text = page.extract_text(extraction_mode="layout")
+#            else:
+#                page_text = page.extract_text()
+#            text_parts.append(page_text)
+#        return "\n".join(text_parts)
+#    except Exception as e:
+#        print(f"Error extracting text with PyPDF from {pdf_path}: {e}")
+#        return ""
 
 
 def extract_markdown_pymupdf(pdf_path: str) -> str:
@@ -89,30 +89,30 @@ def process_single_pdf(pdf_path: Path, pypdf_layout: bool) -> dict:
     print(f"\n📄 Processing: {pdf_path}")
 
     # PyPDF
-    start = time.time()
-    pypdf_out = extract_text_pypdf(str(pdf_path), use_layout_mode=pypdf_layout)
-    pypdf_time = time.time() - start
+    #start = time.time()
+    #pypdf_out = extract_text_pypdf(str(pdf_path), use_layout_mode=pypdf_layout)
+    #pypdf_time = time.time() - start
 
     # pymupdf
     start = time.time()
     pymupdf_out = extract_markdown_pymupdf(str(pdf_path))
     pymupdf_time = time.time() - start
 
-    similarity = calculate_similarity(pypdf_out, pymupdf_out)
-    header_analysis = analyze_headers(pypdf_out, pymupdf_out)
-    tables = analyze_tables(pymupdf_out)
+    #similarity = calculate_similarity(pypdf_out, pymupdf_out)
+    #header_analysis = analyze_headers(pypdf_out, pymupdf_out)
+    #tables = analyze_tables(pymupdf_out)
 
     return {
         "file": str(pdf_path),
-        "pypdf_time": round(pypdf_time, 4),
+        #"pypdf_time": round(pypdf_time, 4),
         "pymupdf_time": round(pymupdf_time, 4),
-        "pypdf_chars": len(pypdf_out),
-        "pymupdf_chars": len(pymupdf_out),
-        "similarity": round(similarity, 4),
-        "plain_headers": header_analysis["plain_headers_count"],
-        "markdown_headers": header_analysis["markdown_headers_count"],
-        "tables_detected": tables,
-        "pypdf_output": pypdf_out,  # for optional saving
+        #"pypdf_chars": len(pypdf_out),
+        #"pymupdf_chars": len(pymupdf_out),
+        #"similarity": round(similarity, 4),
+        #"plain_headers": header_analysis["plain_headers_count"],
+        #"markdown_headers": header_analysis["markdown_headers_count"],
+        #"tables_detected": tables,
+        #"pypdf_output": pypdf_out,  # for optional saving
         "pymupdf_output": pymupdf_out,
     }
 
@@ -147,6 +147,7 @@ def main():
     parser.add_argument(
         "--save-outputs",
         action="store_true",
+        default = True,
         help="Save extracted text/markdown for each PDF",
     )
     parser.add_argument(
@@ -195,20 +196,20 @@ def main():
                 file_out_dir.mkdir(parents=True, exist_ok=True)
 
                 # Save PyPDF output
-                (file_out_dir / f"{pdf_name}_pypdf.txt").write_text(
-                    result["pypdf_output"], encoding="utf-8"
-                )
+                #(file_out_dir / f"{pdf_name}_pypdf.txt").write_text(
+                #    result["pypdf_output"], encoding="utf-8"
+                #)
                 # Save pymupdf output
                 (file_out_dir / f"{pdf_name}_pymupdf.md").write_text(
                     result["pymupdf_output"], encoding="utf-8"
                 )
 
             # Print brief summary for this file
-            print(
-                f"   ✅ Similarity: {result['similarity']:.4f}  |  "
-                f"PyPDF: {result['pypdf_time']}s  |  "
-                f"pymupdf: {result['pymupdf_time']}s"
-            )
+            #print(
+            #    f"   ✅ Similarity: {result['similarity']:.4f}  |  "
+            #    f"PyPDF: {result['pypdf_time']}s  |  "
+            #    f"pymupdf: {result['pymupdf_time']}s"
+            #)
 
         except Exception as e:
             print(f"   ❌ Failed: {e}")
@@ -223,34 +224,34 @@ def main():
     # --------------------------------------------------------------------------
     # Generate CSV Report
     # --------------------------------------------------------------------------
-    csv_path = output_path / "comparison_report.csv"
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
-        fieldnames = [
-            "file",
-            "pypdf_time",
-            "pymupdf_time",
-            "pypdf_chars",
-            "pymupdf_chars",
-            "similarity",
-            "plain_headers",
-            "markdown_headers",
-            "tables_detected",
-        ]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        for r in results:
-            row = {k: r.get(k) for k in fieldnames}
-            writer.writerow(row)
-
-    print(f"\n📊 CSV report saved to: {csv_path}")
-
-    # Also print aggregate statistics
-    valid = [r for r in results if r.get("similarity") is not None]
-    if valid:
-        avg_sim = sum(r["similarity"] for r in valid) / len(valid)
-        print(f"\n📈 Average similarity across {len(valid)} files: {avg_sim:.4f}")
-
-    print("\n✨ All done!")
+    #csv_path = output_path / "comparison_report.csv"
+    #with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    #    fieldnames = [
+    #        "file",
+    #        "pypdf_time",
+    #        "pymupdf_time",
+    #        "pypdf_chars",
+    #        "pymupdf_chars",
+    #        "similarity",
+    #        "plain_headers",
+    #        "markdown_headers",
+    #        "tables_detected",
+    #    ]
+    #    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    #    writer.writeheader()
+    #    for r in results:
+    #        row = {k: r.get(k) for k in fieldnames}
+    #        writer.writerow(row)
+#
+    #print(f"\n📊 CSV report saved to: {csv_path}")
+#
+    ## Also print aggregate statistics
+    #valid = [r for r in results if r.get("similarity") is not None]
+    #if valid:
+    #    avg_sim = sum(r["similarity"] for r in valid) / len(valid)
+    #    print(f"\n📈 Average similarity across {len(valid)} files: {avg_sim:.4f}#")
+#
+    #print("\n✨ All done!")
 
 
 if __name__ == "__main__":
